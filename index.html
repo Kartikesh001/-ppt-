@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Tenant SaaS Workflow System Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .workflow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .step {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .step-1 { 
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            order: 1;
+        }
+        .step-2 { 
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            order: 2;
+        }
+        .step-3 { 
+            background: linear-gradient(135deg, #45b7d1, #2196f3);
+            color: white;
+            order: 3;
+        }
+        .step-4 { 
+            background: linear-gradient(135deg, #96ceb4, #6ab7aa);
+            color: white;
+            order: 4;
+        }
+        .step-5 { 
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            order: 5;
+        }
+        .step-6 { 
+            background: linear-gradient(135deg, #a55eea, #8b5cf6);
+            color: white;
+            order: 6;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+
+        .tech-stack {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+        }
+
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 2rem;
+            color: #667eea;
+            font-weight: bold;
+            z-index: 10;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .system-overview {
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .system-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .component {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 3px solid #667eea;
+        }
+
+        .component-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .component-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .component-tech {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .workflow {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .step {
+                width: 100%;
+                max-width: 350px;
+                order: unset !important;
+            }
+            
+            .arrow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Multi-Tenant SaaS System Architecture</h1>
+        
+        <div class="workflow">
+            <div class="step step-1">
+                <div class="step-number">1</div>
+                <div class="icon">🏢</div>
+                <div class="step-title">Business Signup</div>
+                <div class="step-description">New business registers and creates account</div>
+                <div class="tech-stack">Registration Portal</div>
+            </div>
+
+            <div class="step step-2">
+                <div class="step-number">2</div>
+                <div class="icon">🗄️</div>
+                <div class="step-title">Tenant Creation</div>
+                <div class="step-description">Dedicated schema created in PostgreSQL database</div>
+                <div class="tech-stack">PostgreSQL Multi-Schema</div>
+            </div>
+
+            <div class="step step-3">
+                <div class="step-number">3</div>
+                <div class="icon">💻</div>
+                <div class="step-title">User Interface</div>
+                <div class="step-description">Users interact through responsive web application</div>
+                <div class="tech-stack">React.js Frontend</div>
+            </div>
+
+            <div class="step step-4">
+                <div class="step-number">4</div>
+                <div class="icon">⚙️</div>
+                <div class="step-title">Backend Services</div>
+                <div class="step-description">API handles business logic and data operations</div>
+                <div class="tech-stack">Node.js + Express</div>
+            </div>
+
+            <div class="step step-5">
+                <div class="step-number">5</div>
+                <div class="icon">🤖</div>
+                <div class="step-title">ML Analytics</div>
+                <div class="step-description">AI engine processes data for insights and reminders</div>
+                <div class="tech-stack">Machine Learning Pipeline</div>
+            </div>
+
+            <div class="step step-6">
+                <div class="step-number">6</div>
+                <div class="icon">📊</div>
+                <div class="step-title">Reports & Dashboards</div>
+                <div class="step-description">Customized analytics delivered to tenant dashboard</div>
+                <div class="tech-stack">Data Visualization</div>
+            </div>
+        </div>
+
+        <div class="system-overview">
+            <div class="system-title">🏗️ System Architecture Components</div>
+            <div class="architecture-grid">
+                <div class="component">
+                    <div class="component-icon">🎨</div>
+                    <div class="component-name">Frontend Layer</div>
+                    <div class="component-tech">React.js, HTML5, CSS3</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔧</div>
+                    <div class="component-name">API Gateway</div>
+                    <div class="component-tech">Node.js, Express.js</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">💾</div>
+                    <div class="component-name">Database</div>
+                    <div class="component-tech">PostgreSQL Multi-Tenant</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🧠</div>
+                    <div class="component-name">ML Engine</div>
+                    <div class="component-tech">Analytics & Predictions</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔒</div>
+                    <div class="component-name">Security Layer</div>
+                    <div class="component-tech">Authentication & Authorization</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">☁️</div>
+                    <div class="component-name">Cloud Infrastructure</div>
+                    <div class="component-tech">Scalable Hosting</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add subtle animations and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const steps = document.querySelectorAll('.step');
+            const components = document.querySelectorAll('.component');
+            
+            // Staggered animation for steps
+            steps.forEach((step, index) => {
+                step.style.opacity = '0';
+                step.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    step.style.transition = 'all 0.6s ease';
+                    step.style.opacity = '1';
+                    step.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+            
+            // Hover effects for components
+            components.forEach(component => {
+                component.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                    this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.15)';
+                });
+                
+                component.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                    this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)';
+                });
+            });
+            
+            // Animate arrows
+            const arrows = document.querySelectorAll('.arrow');
+            arrows.forEach((arrow, index) => {
+                setTimeout(() => {
+                    arrow.style.opacity = '1';
+                }, (steps.length * 200) + (index * 100));
+            });
+        });
+    </script>
+</body>
+</html>
